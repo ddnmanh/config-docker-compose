@@ -43,13 +43,11 @@ Một số URL quan trọng:
 
    4.2 [Xác định địa chỉ truy cập và cấu hình DNS](#42-xác-định-địa-chỉ-truy-cập-và-cấu-hình-dns-cho-domain)
    
-   4.3 [Cấu hình lại Docker-compose](#43-cấu-hình-lại-docker-compose)
+   4.3 [Thiết lập điều hướng cho Nginx của server](#43-thiết-lập-điều-hướng-cho-nginx-của-server)
    
-   4.4 [Chạy dự án](#44-chạy-dự-án)
-
+   4.4 [Cấu hình lại Docker-compose](#44-cấu-hình-lại-docker-compose)
    
-   
-
+   4.5 [Chạy dự án](#45-chạy-dự-án)
 
 ## 1. Tải mã nguồn
 ```terminal
@@ -87,8 +85,8 @@ Một bảng tương tự sẽ hiện ra:
 CONTAINER ID   IMAGE                                      ...   PORTS                  NAMES
 47635235a510   config-docker-compose-mysql-database-app   ...   3306/tcp, 33060/tcp    mysql-database
 a9512c3b8249   config-docker-compose-frontend-app         ...   80/tcp                 frontend
+57601c1a68c0   config-docker-compose-backend-app          ...                          backend
 07ca7d741bd7   config-docker-compose-proxy-app            ...   0.0.0.0:8000->80/tcp   proxy
-57601c1a68c0   config-docker-compose-backend-app          ...   80/tcp                 backend
 ```
 
 - Khởi động lại Docker-container 'backend' và 'mysql-database' bằng 'CONTAINER ID' tương ứng**
@@ -97,14 +95,14 @@ docker restart 47635235a510 57601c1a68c0
 ```
 
 ### 2.2 Kiểm tra
-Kiểm tra cơ sở dữ liệu trong Docker-container "mysql-database"
-1. Quay trở lại terminal và chạy lệnh sau
+Kiểm tra cơ sở dữ liệu trong Docker-container "mysql-database" bằng 'CONTAINER ID'
+* Truy cập cơ sở dữ liệu MySQL
 ```terminal
-docker exec -it mysql-database mysql -u root -p
+docker exec -it 47635235a510 mysql -u root -p
 ``` 
-2. Nhập mật khẩu `123` (Mật khẩu sẽ không hiển thị)
+* Nhập mật khẩu `123` (Mật khẩu sẽ không hiển thị)
 
-3. Xem các cơ sở dữ liệu hiện có trong container "mysql-database"
+* Xem các cơ sở dữ liệu hiện có
 ```terminal
 show databases;
 ```
@@ -173,7 +171,7 @@ services:
          - this-project-network
       image: ducmanhjr/config-docker-compose-backend-app
 
-   ...
+# ...
 ```
 ### 3.5 Đẩy tệp `compose.yaml` lên kho lưu trữ
 Lựa chọn GitHub cho việc lưu trữ tệp `compose.yaml` (chỉ cần đẩy duy nhất tệp này để tránh lộ mã nguồn).
@@ -181,9 +179,10 @@ Lựa chọn GitHub cho việc lưu trữ tệp `compose.yaml` (chỉ cần đ�
 Bạn có thể tham khảo thêm tài liệu tạo và đẩy dự án lên repository của GitHub [tại đây](https://www.digitalocean.com/community/tutorials/how-to-push-an-existing-project-to-github).
 
 ## 4. Triển khai dự án lên server Ubuntu theo Docker-compose
-Yêu cầu: Đã cài đặt Git, Docker, Docker-compose cho server thành công
+Yêu cầu: Đã cài đặt Nginx, Git, Docker, Docker-compose cho server thành công.
 
 Tài liệu tham khảo:
+* [Cài đặt và cấu hình máy chủ web Nginx trên Ubuntu](https://www.digitalocean.com/community/tutorials/how-to-install-nginx-on-ubuntu-22-04).
 * [Cài đặt và cấu hình Git trên Ubuntu](https://phoenixnap.com/kb/how-to-install-git-on-ubuntu#ftoc-heading-3).
 * [Cài đặt và sử dụng Docker trên Ubuntu](https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-on-ubuntu-22-04).
   
@@ -203,7 +202,7 @@ Cú pháp: `git clone <url repository>`
 Cấu hình của `proxy-app` trong tệp `compose.yaml` cho thấy dự án sẽ chạy ở cổng `8000`.
 
 ```yaml
-... 
+# ... 
     proxy-app:
         build:
             context: ./proxy
@@ -213,25 +212,64 @@ Cấu hình của `proxy-app` trong tệp `compose.yaml` cho thấy dự án s�
             - this-project-network
         ports:
             - "8000:80"
-...
+# ...
 ```
 
 * Cấu hình DNS cho domain
 
    Truy cập vào nhà quản lý tên miền và thiết lập `conf-docker-compose.example.com` trỏ đến địa chỉ `171.248.108.76:8000`.
 
-### 4.3 Cấu hình lại Docker-compose 
-Trong tệp `compose.yaml` tìm và thay thế các `http://localhost:8000` bằng `http://conf-docker-compose.example.com:8000`.
+### 4.3 Thiết lập điều hướng cho Nginx của server
+* Tạo tệp cấu hình
+```ubuntu
+sudo vim /etc/nginx/sites-available/conf-docker-compose.example.com
+```
+Thêm và nội dung sau:
+```text
+server {
+    listen 80;
+    listen [::]:80;
 
-Trước khi thay thế
+    server_name conf-docker-compose.example.com www.conf-docker-compose.example.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+    }
+
+    error_log  /var/log/nginx/conf-docker-compose.dnmanh.io.vn_error.log;
+    access_log /var/log/nginx/conf-docker-compose.dnmanh.io.vn_access.log;
+}
+```
+
+* Kích hoạt tệp cấu hình
+```terminal
+sudo ln -s /etc/nginx/sites-available/conf-docker-compose.example.com /etc/nginx/sites-enabled/
+```
+
+* Khởi động lại Nginx
+```terminal
+sudo systemctl restart nginx
+```
+
+### 4.4 Cấu hình lại Docker-compose 
+Trong tệp `compose.yaml` tìm và thay thế các `http://localhost:8000` bằng `http://conf-docker-compose.example.com`.
+
+***Lưu ý:*** *Nếu tên miền của bạn có chứng chỉ SSL/TLS thì thay thế bằng `https` thay vì `http`.*
+ 
 ```yaml
-# Backend
+# ...
+
 backend-app: 
     build:
         context: ./backend
         dockerfile: ./Dockerfile
         args: 
-            - DOMAIN_ACCEPT_CORS=http://localhost:8000
+            - DOMAIN_ACCEPT_CORS=https://conf-docker-compose.example.com
     container_name: backend 
     networks:
         - this-project-network
@@ -242,37 +280,14 @@ frontend-app:
         context: ./frontend
         dockerfile: ./Dockerfile  
         args: 
-            - DOMAIN_BACKEND=http://localhost:8000/api
+            - DOMAIN_BACKEND=https://conf-docker-compose.example.com/api
     container_name: frontend  
     networks:
         - this-project-network
+
+# ...
 ```
 
-Sau khi thay thế
-```yaml
-# Backend
-backend-app: 
-    build:
-        context: ./backend
-        dockerfile: ./Dockerfile
-        args: 
-            - DOMAIN_ACCEPT_CORS=http://conf-docker-compose.example.com:8000
-    container_name: backend 
-    networks:
-        - this-project-network
-
-# Frontend 
-frontend-app:
-    build:
-        context: ./frontend
-        dockerfile: ./Dockerfile  
-        args: 
-            - DOMAIN_BACKEND=http://conf-docker-compose.example.com:8000/api
-    container_name: frontend  
-    networks:
-        - this-project-network
-```
-
-### 4.4 Chạy dự án
+### 4.5 Chạy dự án
 Tương tự như chạy dự án ở localhost [Lối tắt](#2-chạy-dự-án-với-docker-compose-ở-localhost).
 
