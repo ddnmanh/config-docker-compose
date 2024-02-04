@@ -7,7 +7,7 @@ const port = 80;
 
 app.use(
 	cors({
-		origin: ["http://localhost:8000"],
+		origin: [process.env.DOMAIN_FRONTEND],
 		methods: "GET,POST,PUT,PATCH,DELETE",
 		credentials: true
 	})
@@ -28,7 +28,7 @@ app.get('/api/query/student', async (req, res) => {
 });
 
 app.get('/api', (req, res) => {
-    res.send('Backend run with docker compose!');
+    res.send('Backend run with docker compose and accept cors with ' + process.env.DOMAIN_FRONTEND);
 })
 
 app.listen(port, () => {

@@ -1,50 +1,53 @@
-version: '3'
 services:
 
-  # Database
-  mysql-database-app:
-    build:
-      context: ./mysql
-      dockerfile: ./Dockerfile
-    container_name: mysql-database  
-    volumes:
-      - mysql-database-volume-app:/var/lib/mysql
-    networks:
-      - this-project-network 
+    # Database
+    mysql-database-app:
+        build:
+            context: ./mysql
+            dockerfile: ./Dockerfile
+        container_name: mysql-database  
+        volumes:
+            - mysql-database-volume-app:/var/lib/mysql
+        networks:
+            - this-project-network  
 
-  # Backend
-  backend-app: 
-    build:
-      context: ./backend
-      dockerfile: ./Dockerfile
-    container_name: backend 
-    networks:
-      - this-project-network
+    # Backend
+    backend-app: 
+        build:
+            context: ./backend
+            dockerfile: ./Dockerfile
+            args: 
+                - DOMAIN_ACCEPT_CORS=http://localhost:8000
+        container_name: backend 
+        networks:
+            - this-project-network
 
-  # Frontend 
-  frontend-app:
-    build:
-      context: ./frontend
-      dockerfile: ./Dockerfile
-    container_name: frontend  
-    networks:
-      - this-project-network
+    # Frontend 
+    frontend-app:
+        build:
+            context: ./frontend
+            dockerfile: ./Dockerfile  
+            args: 
+                - DOMAIN_BACKEND=http://localhost:8000/api
+        container_name: frontend  
+        networks:
+            - this-project-network
   
-  # Proxy
-  proxy-app:
-    build:
-      context: ./proxy
-      dockerfile: ./Dockerfile 
-    container_name: proxy 
-    networks:
-      - this-project-network
-    ports:
-      - "8000:80"
+    # Proxy
+    proxy-app:
+        build:
+            context: ./proxy
+            dockerfile: ./Dockerfile 
+        container_name: proxy 
+        networks:
+            - this-project-network
+        ports:
+            - "8000:80"
 
 
 volumes:
-  mysql-database-volume-app:
+    mysql-database-volume-app:
 
 networks:
-  this-project-network:
+    this-project-network:
     # driver: bridge

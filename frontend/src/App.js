@@ -24,6 +24,8 @@ function App() {
       });
   }
 
+  console.log(process.env.REACT_APP_DOMAIN_SERVER);
+
   return (
     <div className="App">
       <h1>Danh sách sinh viên!</h1>
