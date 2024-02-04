@@ -49,6 +49,14 @@ Một số URL quan trọng:
    
    4.5 [Chạy dự án](#45-chạy-dự-án)
 
+5. [Một số vấn đề liên quan](#5-một-số-vấn-đề-liên-quan)
+
+   5.1 [Tự động chạy Docker-container khi server khởi động](#51-tự-động-chạy-docker-container-khi-server-khởi-động)
+   
+   5.2 [Back-up dữ liệu MySQL cho Docker-container](#52-back-up-dữ-liệu-mysql-cho-docker-container)
+
+   5.3 (Tiếp tục cập nhật...)
+
 ## 1. Tải mã nguồn
 ```terminal
 git clone https://github.com/nguyenducmanhmysc/config-docker-compose.git
@@ -291,3 +299,33 @@ frontend-app:
 ### 4.5 Chạy dự án
 Tương tự như chạy dự án ở localhost [Lối tắt](#2-chạy-dự-án-với-docker-compose-ở-localhost).
 
+## 5. Một số vấn đề liên quan
+### 5.1 Tự động chạy Docker-container khi server khởi động
+* Trường hợp 1: Thiết lập cho từng Docker-container
+
+Cú pháp: `docker update --restart unless-stopped <các container id>`.
+
+```terminal
+docker update --restart unless-stopped 57601c1a68c0
+```
+* Trường hợp 2: Thiết lập cho tất cả Docker-container đang chạy
+
+```terminal
+docker update --restart unless-stopped $(docker ps -q)
+```
+
+Tham khảo thêm [tại đây](https://linux.how2shout.com/how-to-start-docker-container-automatically-on-boot-in-linux/).
+
+### 5.2 Back-up dữ liệu MySQL cho Docker-container
+* Di chuyển đến thư mục sẽ lưu tệp back-up
+```terminal
+cd /home/ducmanh/temp
+```
+* Back-up dữ liệu
+
+Cú pháp: `docker exec <container id> /usr/bin/mysqldump -u <Tài khoản MySQL> --password=<mật khẩu MySQL> <Tên cơ sở dữ liệu> > <Tên tệp back-up>.sql`.
+```terminal
+docker exec 47635235a510 /usr/bin/mysqldump -u root --password=123 manager_student > data_mysql_backup.sql
+```
+
+Tham khảo thêm [tại đây](https://stackoverflow.com/questions/34773555/exporting-data-from-mysql-docker-container).

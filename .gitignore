@@ -2,10 +2,10 @@
 /frontend/node_modules
 /backend/node_modules 
 
-# .pnp
-# .pnp
-# .pnp.js
-# .pnp.js
+.pnp
+.pnp
+.pnp.js
+.pnp.js
 
 # testing
 /frontend/coverage
@@ -13,6 +13,6 @@
 # production
 /frontend/build
  
-# npm-debug.log*
-# yarn-debug.log*
-# yarn-error.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
