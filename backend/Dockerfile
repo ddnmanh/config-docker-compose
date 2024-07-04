@@ -4,23 +4,31 @@ WORKDIR /app
 
 COPY package*.json ./
 
+USER root
+
 RUN npm install
 RUN npm install pm2 -g
 
 COPY . .
+# COPY ./project/public ../usr/src/my-app-name
 
 EXPOSE 80
  
-# Thiết lập biến môi trường cho host của database
-ENV DB_HOST=mysql-database
-ENV DB_PORT=3306
-ENV DB_USER=root
-ENV DB_PASSWORD=123
-ENV DB_DATABASE=manager_student
+# Ghi đè biến môi trường từ file compose.yaml 
+ENV EXPRESS_APP_PORT=80
 
-# Ghi đè biến môi trường từ file compose.yaml
-ARG DOMAIN_ACCEPT_CORS
-ENV DOMAIN_FRONTEND=${DOMAIN_ACCEPT_CORS}
+ARG DATABASE_HOST_NAME
+ENV EXPRESS_DATABASE_HOST_NAME=${DATABASE_HOST_NAME}
+ARG DATABASE_HOST_PORT
+ENV EXPRESS_DATABASE_HOST_PORT=${DATABASE_HOST_PORT}
+ARG DATABASE_USER
+ENV EXPRESS_DATABASE_USER=${DATABASE_USER}
+ARG DATABASE_PASSWORD
+ENV EXPRESS_DATABASE_PASSWORD=${DATABASE_PASSWORD}
+ARG DATABASE_NAME
+ENV EXPRESS_DATABASE_DATABASE_NAME=${DATABASE_NAME}
+ARG PATH_STATIC
+ENV EXPRESS_PATH_STATIC=${PATH_STATIC}
 
 # Khởi chạy ứng dụng với pm2 khi docker container được khởi động
 CMD ["pm2-runtime", "server.js", "--watch"]

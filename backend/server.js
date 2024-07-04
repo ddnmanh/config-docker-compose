@@ -1,36 +1,21 @@
-const express = require('express'); 
-const connectDB = require('./src/databases/connect.js');
-const cors = require('cors');
 
+import 'dotenv/config';
+import cors from 'cors';
+import express from 'express';
+import bodyParser from "body-parser"; 
 const app = express();
-const port = 80;
 
-app.use(
-	cors({
-		origin: [process.env.DOMAIN_FRONTEND],
-		methods: "GET,POST,PUT,PATCH,DELETE",
-		credentials: true
-	})
-)
+import routes from './src/routes/routes.js';
 
-app.get('/api/query/student', async (req, res) => { 
+app.use(cors());
 
-    try {  
-        connectDB.query('SELECT * FROM student', async (err, result) => {
+app.use('/statics', express.static(process.env.EXPRESS_PATH_STATIC || './public'));
 
-            if (err) return res.status(500).json({message: err}); 
-    
-            return res.status(200).json(result ? result : false);
-        });
-    } catch (err) {
-        res.send({message: 'Error when query database!'});
-    }
+app.use(bodyParser.json()) // middleware to parse incoming data from HTTP request as JSON and convert them into JavaScript objects
+app.use(bodyParser.urlencoded({extended: true})) // Midđleware to parses incoming data from HTTP requests as URL-encoded and converts them into JavaScript objects
+ 
+routes(app);
+
+app.listen(process.env.EXPRESS_APP_PORT, () => {
+    console.log(`Example app listening on port ${process.env.EXPRESS_APP_PORT}`)
 });
-
-app.get('/api', (req, res) => {
-    res.send('Backend run with docker compose and accept cors with ' + process.env.DOMAIN_FRONTEND);
-})
-
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`);
-})

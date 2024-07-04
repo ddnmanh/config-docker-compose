@@ -5,22 +5,14 @@ services:
         build:
             context: ./mysql
             dockerfile: ./Dockerfile
+            args: 
+                - DATABASE_NAME=image_management
+                - DATABASE_USER_ROOT_PASSWORD=123
         container_name: mysql-database  
         volumes:
             - mysql-database-volume-app:/var/lib/mysql
         networks:
             - this-project-network  
-
-    # Backend
-    backend-app: 
-        build:
-            context: ./backend
-            dockerfile: ./Dockerfile
-            args: 
-                - DOMAIN_ACCEPT_CORS=http://localhost:8000
-        container_name: backend 
-        networks:
-            - this-project-network
 
     # Frontend 
     frontend-app:
@@ -28,8 +20,28 @@ services:
             context: ./frontend
             dockerfile: ./Dockerfile  
             args: 
-                - DOMAIN_BACKEND=http://localhost:8000/api
+                - DOMAIN_BACKEND=http://localhost:6600
+                - DOMAIN_BACKEND_API=http://localhost:6600/api
+                - DOMAIN_BACKEND_STATIC=http://localhost:6600/statics
         container_name: frontend  
+        networks:
+            - this-project-network
+
+    # Backend
+    backend-app: 
+        build:
+            context: ./backend
+            dockerfile: ./Dockerfile
+            args: 
+                - DATABASE_HOST_NAME=mysql-database
+                - DATABASE_HOST_PORT=3306
+                - DATABASE_USER=root
+                - DATABASE_PASSWORD=123
+                - DATABASE_NAME=image_management
+                - PATH_STATIC=../usr/src/my-app-name
+        container_name: backend 
+        volumes:
+            - static-storage-volume-app:/usr/src/my-app-name
         networks:
             - this-project-network
   
@@ -42,12 +54,13 @@ services:
         networks:
             - this-project-network
         ports:
-            - "8000:80"
+            - "6600:80"
 
 
 volumes:
     mysql-database-volume-app:
+    static-storage-volume-app:
 
 networks:
     this-project-network:
-    # driver: bridge
+        # driver: bridge
