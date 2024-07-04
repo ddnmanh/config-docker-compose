@@ -64,6 +64,8 @@ Dự án "Quản lý ảnh" được thiết kế đơn giản, nhằm mô phỏ
    
    4.5 [Chạy dự án](#45-chạy-dự-án)
 
+   4.6 [Nhập và xuất dữ liệu](#46-nhập-và-xuất-dữ-liệu)
+
 5. [Một số vấn đề liên quan](#5-một-số-vấn-đề-liên-quan)
 
    5.1 [Tự động chạy Docker-container khi server khởi động](#51-tự-động-chạy-docker-container-khi-server-khởi-động)
